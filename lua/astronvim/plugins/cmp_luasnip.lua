@@ -19,33 +19,7 @@ return {
       },
       { "hrsh7th/cmp-buffer", lazy = true },
       { "hrsh7th/cmp-path", lazy = true },
-      {
-        "hrsh7th/cmp-nvim-lsp",
-        lazy = true,
-        dependencies = {
-          "AstroNvim/astrolsp",
-          optional = true,
-          opts = {
-            capabilities = {
-              textDocument = {
-                completion = {
-                  completionItem = {
-                    documentationFormat = { "markdown", "plaintext" },
-                    snippetSupport = true,
-                    preselectSupport = true,
-                    insertReplaceSupport = true,
-                    labelDetailsSupport = true,
-                    deprecatedSupport = true,
-                    commitCharactersSupport = true,
-                    tagSupport = { valueSet = { 1 } },
-                    resolveSupport = { properties = { "documentation", "detail", "additionalTextEdits" } },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
+      { "hrsh7th/cmp-nvim-lsp", lazy = true },
     },
     event = "InsertEnter",
     opts = function()
@@ -53,8 +27,8 @@ return {
 
       local sources = {}
       for source_plugin, source in pairs {
-        ["cmp-nvim-lsp"] = { name = "nvim_lsp", priority = 1000, group_index = 1 },
         ["cmp-buffer"] = { name = "buffer", priority = 500, group_index = 2 },
+        ["cmp-nvim-lsp"] = { name = "nvim_lsp", priority = 1000 },
         ["cmp-path"] = { name = "path", priority = 250 },
       } do
         if astro.is_available(source_plugin) then table.insert(sources, source) end
@@ -88,20 +62,20 @@ return {
         mapping = {
           ["<Up>"] = cmp.mapping.select_prev_item { behavior = cmp.SelectBehavior.Select },
           ["<Down>"] = cmp.mapping.select_next_item { behavior = cmp.SelectBehavior.Select },
-          ["<C-p>"] = cmp.mapping.select_prev_item { behavior = cmp.SelectBehavior.Insert },
-          ["<C-n>"] = cmp.mapping.select_next_item { behavior = cmp.SelectBehavior.Insert },
-          ["<C-k>"] = cmp.mapping.select_prev_item { behavior = cmp.SelectBehavior.Insert },
-          ["<C-j>"] = cmp.mapping.select_next_item { behavior = cmp.SelectBehavior.Insert },
-          ["<C-u>"] = cmp.mapping(cmp.mapping.scroll_docs(-4), { "i", "c" }),
-          ["<C-d>"] = cmp.mapping(cmp.mapping.scroll_docs(4), { "i", "c" }),
+          ["<C-P>"] = cmp.mapping.select_prev_item { behavior = cmp.SelectBehavior.Insert },
+          ["<C-N>"] = cmp.mapping.select_next_item { behavior = cmp.SelectBehavior.Insert },
+          ["<C-K>"] = cmp.mapping.select_prev_item { behavior = cmp.SelectBehavior.Insert },
+          ["<C-J>"] = cmp.mapping.select_next_item { behavior = cmp.SelectBehavior.Insert },
+          ["<C-U>"] = cmp.mapping(cmp.mapping.scroll_docs(-4), { "i", "c" }),
+          ["<C-D>"] = cmp.mapping(cmp.mapping.scroll_docs(4), { "i", "c" }),
           ["<C-Space>"] = cmp.mapping(cmp.mapping.complete(), { "i", "c" }),
-          ["<C-y>"] = cmp.config.disable,
-          ["<C-e>"] = cmp.mapping { i = cmp.mapping.abort(), c = cmp.mapping.close() },
+          ["<C-Y>"] = cmp.config.disable,
+          ["<C-E>"] = cmp.mapping { i = cmp.mapping.abort(), c = cmp.mapping.close() },
           ["<CR>"] = cmp.mapping.confirm { select = false },
           ["<Tab>"] = cmp.mapping(function(fallback)
             if cmp.visible() then
               cmp.select_next_item()
-            elseif vim.snippet and vim.snippet.jumpable(1) then
+            elseif vim.snippet and vim.snippet.active { direction = 1 } then
               vim.schedule(function() vim.snippet.jump(1) end)
             elseif has_words_before() then
               cmp.complete()
@@ -112,7 +86,7 @@ return {
           ["<S-Tab>"] = cmp.mapping(function(fallback)
             if cmp.visible() then
               cmp.select_prev_item()
-            elseif vim.snippet and vim.snippet.jumpable(-1) then
+            elseif vim.snippet and vim.snippet.active { direction = -1 } then
               vim.schedule(function() vim.snippet.jump(-1) end)
             else
               fallback()
@@ -121,6 +95,33 @@ return {
         },
         sources = sources,
       }
+    end,
+    config = function(...) require "astronvim.plugins.configs.cmp"(...) end,
+  },
+  {
+    "AstroNvim/astrolsp",
+    optional = true,
+    opts = function(_, opts)
+      local astrocore = require "astrocore"
+      if astrocore.is_available "cmp-nvim-lsp" then
+        opts.capabilities = astrocore.extend_tbl(opts.capabilities, {
+          textDocument = {
+            completion = {
+              completionItem = {
+                documentationFormat = { "markdown", "plaintext" },
+                snippetSupport = true,
+                preselectSupport = true,
+                insertReplaceSupport = true,
+                labelDetailsSupport = true,
+                deprecatedSupport = true,
+                commitCharactersSupport = true,
+                tagSupport = { valueSet = { 1 } },
+                resolveSupport = { properties = { "documentation", "detail", "additionalTextEdits" } },
+              },
+            },
+          },
+        })
+      end
     end,
   },
   {
