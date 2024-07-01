@@ -3,7 +3,7 @@ return {
   lazy = true,
   ---@type AstroUIOpts
   opts = {
-    colorscheme = "astrodark",
+    colorscheme = "astrotheme",
     icons = {
       ActiveLSP = "",
       ActiveTS = "",
@@ -14,7 +14,7 @@ return {
       DapBreakpoint = "",
       DapBreakpointCondition = "",
       DapBreakpointRejected = "",
-      DapLogPoint = ".>",
+      DapLogPoint = "󰛿",
       DapStopped = "󰁕",
       Debugger = "",
       DefaultFile = "󰈙",

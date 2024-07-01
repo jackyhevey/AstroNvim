@@ -33,7 +33,7 @@ return {
     maps.n["<Leader>Q"] = { "<Cmd>confirm qall<CR>", desc = "Exit AstroNvim" }
     maps.n["<Leader>n"] = { "<Cmd>enew<CR>", desc = "New File" }
     maps.n["<C-S>"] = { "<Cmd>silent! update! | redraw<CR>", desc = "Force write" }
-    -- TODO: AstroNvim v5, remove <C-S> outside of normal mode to not conflict with default signature help
+    -- TODO: remove insert save in AstroNvim v5 when used for signature help
     maps.i["<C-S>"] = { "<Esc>" .. maps.n["<C-S>"][1], desc = maps.n["<C-S>"].desc }
     maps.x["<C-S>"] = maps.i["<C-s>"]
     maps.n["<C-Q>"] = { "<Cmd>q!<CR>", desc = "Force quit" }
@@ -41,7 +41,27 @@ return {
     maps.n["\\"] = { "<Cmd>split<CR>", desc = "Horizontal Split" }
     -- TODO: remove deprecated method check after dropping support for neovim v0.9
     if not vim.ui.open then
-      maps.n["gx"] = { astro.system_open, desc = "Open the file under cursor with system app" }
+      local gx_desc = "Opens filepath or URI under cursor with the system handler (file explorer, web browser, …)"
+      maps.n["gx"] = { function() astro.system_open(vim.fn.expand "<cfile>") end, desc = gx_desc }
+      maps.x["gx"] = {
+        function()
+          local lines = vim.fn.getregion(vim.fn.getpos ".", vim.fn.getpos "v", { type = vim.fn.mode() })
+          astro.system_open(table.concat(vim.tbl_map(vim.trim, lines)))
+        end,
+        desc = gx_desc,
+      }
+    end
+    maps.n["<Leader>/"] = { "gcc", remap = true, desc = "Toggle comment line" }
+    maps.x["<Leader>/"] = { "gc", remap = true, desc = "Toggle comment" }
+
+    -- Neovim Default LSP Mappings
+    if vim.fn.has "nvim-0.11" ~= 1 then
+      maps.n["gra"] = { function() vim.lsp.buf.code_action() end, desc = "vim.lsp.buf.code_action()" }
+      maps.x["gra"] = { function() vim.lsp.buf.code_action() end, desc = "vim.lsp.buf.code_action()" }
+      maps.n["grn"] = { function() vim.lsp.buf.rename() end, desc = "vim.lsp.buf.rename()" }
+      maps.n["grr"] = { function() vim.lsp.buf.references() end, desc = "vim.lsp.buf.references()" }
+      -- --- TODO: AstroNvim v5 add backwards compatibility to follow neovim 0.11 mappings
+      -- maps.i["<C-S>"] = { function() vim.lsp.buf.signature_help() end, desc = "vim.lsp.buf.signature_help()" }
     end
 
     -- Plugin Manager
@@ -91,11 +111,24 @@ return {
 
     maps.n["<Leader>l"] = vim.tbl_get(sections, "l")
     maps.n["<Leader>ld"] = { function() vim.diagnostic.open_float() end, desc = "Hover diagnostics" }
+    local function diagnostic_goto(dir, severity)
+      local go = vim.diagnostic["goto_" .. (dir and "next" or "prev")]
+      if type(severity) == "string" then severity = vim.diagnostic.severity[severity] end
+      return function() go { severity = severity } end
+    end
+    -- TODO: Remove mapping after dropping support for Neovim v0.10, it's automatic
+    if vim.fn.has "nvim-0.11" == 0 then
+      maps.n["[d"] = { diagnostic_goto(false), desc = "Previous diagnostic" }
+      maps.n["]d"] = { diagnostic_goto(true), desc = "Next diagnostic" }
+    end
+    maps.n["[e"] = { diagnostic_goto(false, "ERROR"), desc = "Previous error" }
+    maps.n["]e"] = { diagnostic_goto(true, "ERROR"), desc = "Next error" }
+    maps.n["[w"] = { diagnostic_goto(false, "WARN"), desc = "Previous warning" }
+    maps.n["]w"] = { diagnostic_goto(true, "WARN"), desc = "Next warning" }
     -- TODO: Remove mapping after dropping support for Neovim v0.9, it's automatic
     if vim.fn.has "nvim-0.10" == 0 then
-      maps.n["[d"] = { function() vim.diagnostic.goto_prev() end, desc = "Previous diagnostic" }
-      maps.n["]d"] = { function() vim.diagnostic.goto_next() end, desc = "Next diagnostic" }
       maps.n["<C-W>d"] = { function() vim.diagnostic.open_float() end, desc = "Hover diagnostics" }
+      maps.n["<C-W><C-D>"] = { function() vim.diagnostic.open_float() end, desc = "Hover diagnostics" }
     end
     maps.n["gl"] = { function() vim.diagnostic.open_float() end, desc = "Hover diagnostics" }
 
@@ -112,6 +145,12 @@ return {
     maps.n["<C-Down>"] = { "<Cmd>resize +2<CR>", desc = "Resize split down" }
     maps.n["<C-Left>"] = { "<Cmd>vertical resize -2<CR>", desc = "Resize split left" }
     maps.n["<C-Right>"] = { "<Cmd>vertical resize +2<CR>", desc = "Resize split right" }
+
+    maps.n["]q"] = { vim.cmd.cnext, desc = "Next quickfix" }
+    maps.n["[q"] = { vim.cmd.cprev, desc = "Previous quickfix" }
+
+    maps.n["]l"] = { vim.cmd.lnext, desc = "Next loclist" }
+    maps.n["[l"] = { vim.cmd.lprev, desc = "Previous loclist" }
 
     -- Stay in indent mode
     maps.v["<S-Tab>"] = { "<gv", desc = "Unindent line" }

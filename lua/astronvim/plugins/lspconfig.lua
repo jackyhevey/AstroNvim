@@ -15,6 +15,7 @@ return {
       dependencies = { "williamboman/mason.nvim" },
       cmd = { "LspInstall", "LspUninstall" },
       init = function(plugin) require("astrocore").on_load("mason.nvim", plugin.name) end,
+      opts_extend = { "ensure_installed" },
       opts = {
         ensure_installed = {},
         handlers = { function(server) require("astrolsp").lsp_setup(server) end },
@@ -22,7 +23,7 @@ return {
     },
   },
   cmd = function(_, cmds) -- HACK: lazy load lspconfig on `:Neoconf` if neoconf is available
-    if require("astrocore").is_available "neoconf.nvim" then table.insert(cmds, "Neoconf") end
+    if require("lazy.core.config").spec.plugins["neoconf.nvim"] then table.insert(cmds, "Neoconf") end
     vim.list_extend(cmds, { "LspInfo", "LspLog", "LspStart" }) -- add normal `nvim-lspconfig` commands
   end,
   event = "User AstroFile",

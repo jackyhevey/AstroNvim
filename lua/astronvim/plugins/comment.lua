@@ -1,7 +1,6 @@
 return {
   "numToStr/Comment.nvim",
   dependencies = {
-    { "JoosepAlviste/nvim-ts-context-commentstring", lazy = true, opts = { enable_autocmd = false } },
     {
       "AstroNvim/astrocore",
       opts = function(_, opts)
@@ -19,7 +18,7 @@ return {
         }
         maps.x["<Leader>/"] = {
           "<Esc><Cmd>lua require('Comment.api').locked('toggle.linewise')(vim.fn.visualmode())<CR>",
-          desc = "Toggle comment for selection",
+          desc = "Toggle comment",
         }
       end,
     },
